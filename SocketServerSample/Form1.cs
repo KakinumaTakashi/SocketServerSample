@@ -34,13 +34,20 @@ namespace SocketServerSample
 
         }
 
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            listener.Stop();
+        }
+
+        private TcpListener listener;
+
         private void method()
         {
             Log.i("Thread 1 start");
 
             //IPEndPoint ipAdd = new IPEndPoint(IPAddress.Parse("192.168.56.101"), 8888);
             IPEndPoint ipAdd = new IPEndPoint(IPAddress.Parse("192.168.56.1"), 8888);
-            TcpListener listener = new TcpListener(ipAdd);
+            listener = new TcpListener(ipAdd);
             listener.Start(0);
             File.AppendAllText(logFilePath, Log.i("Port:8888のListenを開始しました。"));
 
@@ -101,6 +108,7 @@ namespace SocketServerSample
             //Console.ReadLine();
             //Log.i("Thread 1 end");
         }
+
 
     }
 }
