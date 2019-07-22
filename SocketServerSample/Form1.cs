@@ -17,59 +17,68 @@ namespace SocketServerSample
             InitializeComponent();
         }
 
-        private string logFilePath = @"./SocketServerSample.log";
+        private CancellationTokenSource tokenSource;
+        private CancellationToken cancelToken;
+        private string logFilePath = @"SocketServerSample.log";
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            // .Net Framework 4.0
-            Task.Run(new Action(method));
+            File.AppendAllText(logFilePath, Log.i("Form1_Load start") + Environment.NewLine);
 
-            Task.Run(() =>
-            {
-                Log.i("Thread 2 start");
-            });
+            // .Net Framework 4.0
+            tokenSource = new CancellationTokenSource();
+            cancelToken = tokenSource.Token;
+            Task.Run(new Action(method), cancelToken);
+
             // .Net Framework 1.1
             //Thread thread1 = new Thread(new ThreadStart(method));
 
-
+            File.AppendAllText(logFilePath, Log.i("Form1_Load end") + Environment.NewLine);
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            listener.Stop();
+            tokenSource.Cancel();
         }
-
-        private TcpListener listener;
 
         private void method()
         {
-            Log.i("Thread 1 start");
+            File.AppendAllText(logFilePath, Log.i("method start") + Environment.NewLine);
 
-            //IPEndPoint ipAdd = new IPEndPoint(IPAddress.Parse("192.168.56.101"), 8888);
-            IPEndPoint ipAdd = new IPEndPoint(IPAddress.Parse("192.168.56.1"), 8888);
-            listener = new TcpListener(ipAdd);
+            IPEndPoint ipAdd = new IPEndPoint(IPAddress.Parse("192.168.56.101"), 8888);
+            //IPEndPoint ipAdd = new IPEndPoint(IPAddress.Parse("192.168.56.1"), 8888);
+            TcpListener listener = new TcpListener(ipAdd);
             listener.Start(0);
-            File.AppendAllText(logFilePath, Log.i("Port:8888のListenを開始しました。"));
+            File.AppendAllText(logFilePath, Log.i("Port:8888のListenを開始しました。") + Environment.NewLine);
 
             while (true)
             {
+                // スレッド停止要求チェック
+                if (cancelToken.IsCancellationRequested)
+                {
+                    listener.Stop();
+                    File.AppendAllText(logFilePath, Log.i("Port:8888のListenを停止しました。") + Environment.NewLine);
+                    break;
+                }
+
                 // 接続要求あるかどうか確認
                 if (listener.Pending())
                 {
                     // 接続要求を処理する
-                    File.AppendAllText(logFilePath, Log.i("接続待機開始"));
+                    File.AppendAllText(logFilePath, Log.i("接続待機開始") + Environment.NewLine);
                     var client = listener.AcceptTcpClient();
-                    File.AppendAllText(logFilePath, Log.i("クライアントが接続しました。"));
+                    File.AppendAllText(logFilePath, Log.i("クライアントが接続しました。") + Environment.NewLine);
                     //sessions.Add(new Session(client, SessionCommandExec));
                     //Console.WriteLine("AcceptTcpClient : {0}", client.Client.RemoteEndPoint);
 
                     NetworkStream netStream = client.GetStream();
+                    File.AppendAllText(logFilePath, Log.i("ストリーム オープン") + Environment.NewLine);
                     StreamReader sReader = new StreamReader(netStream, Encoding.UTF8);
                     string str = sReader.ReadLine();
-                    File.AppendAllText(logFilePath, Log.i(str));
+                    File.AppendAllText(logFilePath, Log.i(str) + Environment.NewLine);
 
                     sReader.Close();
-                    File.AppendAllText(logFilePath, Log.i("ストリーム クローズ"));
+                    File.AppendAllText(logFilePath, Log.i("ストリーム クローズ") + Environment.NewLine);
                     //client.Close();
                 }
                 // 受信処理
@@ -106,7 +115,8 @@ namespace SocketServerSample
             //}
             //Console.WriteLine("終了するには、Enterキーを押してください");
             //Console.ReadLine();
-            //Log.i("Thread 1 end");
+
+            File.AppendAllText(logFilePath, Log.i("method end") + Environment.NewLine);
         }
 
 
