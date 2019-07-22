@@ -45,8 +45,8 @@ namespace SocketServerSample
         {
             File.AppendAllText(logFilePath, Log.i("method start") + Environment.NewLine);
 
-            IPEndPoint ipAdd = new IPEndPoint(IPAddress.Parse("192.168.56.101"), 8888);
-            //IPEndPoint ipAdd = new IPEndPoint(IPAddress.Parse("192.168.56.1"), 8888);
+            //IPEndPoint ipAdd = new IPEndPoint(IPAddress.Parse("192.168.56.101"), 8888);
+            IPEndPoint ipAdd = new IPEndPoint(IPAddress.Parse("192.168.56.1"), 8888);
             TcpListener listener = new TcpListener(ipAdd);
             listener.Start(0);
             File.AppendAllText(logFilePath, Log.i("Port:8888のListenを開始しました。") + Environment.NewLine);
